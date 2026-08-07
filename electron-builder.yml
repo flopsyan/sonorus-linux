@@ -39,3 +39,38 @@ linux:
     - deb
     - pacman
     - tar.gz
+
+# electron-builder's stock dependency list for pacman still names `http-parser`,
+# which Arch dropped and which a prebuilt Electron has not linked for years - so
+# the package it builds cannot be installed at all. Replaced here with what the
+# binary really pulls in, read off it rather than guessed:
+#
+#   objdump -p dist/linux-unpacked/sonorus-linux | awk '/NEEDED/{print $2}'
+#
+# mapped to owners with `pacman -Qo`. Only the pacman target is overridden; deb
+# keeps its Debian names, which are right for Debian.
+pacman:
+  depends:
+    - gtk3
+    - nss
+    - nspr
+    - alsa-lib
+    - at-spi2-core
+    - libcups
+    - libxkbcommon
+    - libxcomposite
+    - libxdamage
+    - libxrandr
+    - libxfixes
+    - libxext
+    - libx11
+    - libxcb
+    - cairo
+    - pango
+    - glib2
+    - expat
+    - dbus
+    - systemd-libs
+    - mesa
+    # Not linked but opened at runtime, for the desktop notifications.
+    - libnotify
