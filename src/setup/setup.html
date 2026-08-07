@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; script-src 'self'"
+    />
+    <title>Sonorus</title>
+    <link rel="stylesheet" href="setup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Sonorus</h1>
+      <p class="tagline">Deine Musik, dein Server.</p>
+
+      <form id="form" novalidate>
+        <label class="rack-label" for="server">Server</label>
+        <input id="server" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" />
+        <p class="error" id="error" role="alert"></p>
+        <div class="actions">
+          <button type="button" id="cancel" class="ghost" hidden>Abbrechen</button>
+          <button type="submit" id="connect" class="primary">Verbinden</button>
+        </div>
+      </form>
+    </main>
+    <script src="setup.js"></script>
+  </body>
+</html>
