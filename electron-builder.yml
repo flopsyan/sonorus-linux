@@ -1,0 +1,41 @@
+appId: eu.flopsyan.sonorus
+copyright: Copyright 2026 flopsyan
+
+# `productName` deliberately lives in package.json and only there. Electron
+# takes the settings directory from it (`~/.config/Sonorus`), so a second copy
+# here could drift and hand the packaged app a different directory than
+# `npm start` uses - the kind of split that looks like lost settings.
+
+directories:
+  buildResources: build
+  output: dist
+
+# Only what the app runs from. `node_modules` is deliberately absent: this
+# process imports nothing but `electron` itself, which is the runtime rather
+# than a dependency, so there is nothing to bundle.
+files:
+  - src/**/*
+  - package.json
+
+linux:
+  icon: build/icon.png
+  category: AudioVideo
+  # Names the installed entry after `desktopName` in package.json, which is also
+  # what Electron uses as the window's app id. Without the two agreeing, the
+  # desktop does not connect the running window to its menu entry and the window
+  # wears a generic icon.
+  syncDesktopName: true
+  synopsis: Desktop client for Sonorus
+  description: >-
+    Sonorus in its own window: your self-hosted music library, without a browser
+    around it.
+  # Everything that builds on a bare Arch box: electron-builder brings its own
+  # fpm for these, so nothing has to be installed first. `rpm` and `snap` are
+  # left out on purpose - they need rpmbuild and snapcraft respectively, and a
+  # default build that fails on a machine without them is worse than a build
+  # that says which extra command to run. Both are one flag away, see the README.
+  target:
+    - AppImage
+    - deb
+    - pacman
+    - tar.gz
