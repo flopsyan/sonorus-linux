@@ -1,4 +1,4 @@
-appId: eu.flopsyan.sonorus
+appId: org.sonorus
 copyright: Copyright 2026 flopsyan
 
 # `productName` deliberately lives in package.json and only there. Electron

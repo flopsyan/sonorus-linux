@@ -24,9 +24,9 @@ npm install
 npm start
 ```
 
-The first start asks for the server address, pre-filled with
-`https://sonorus.example.com`, and checks that something answers there before it
-saves. Everything after that is the web app's own login.
+The first start asks for the address of your Sonorus server and checks that
+something answers there before it saves. Everything after that is the web app's
+own login.
 
 A missing scheme becomes `https`, never `http`: the session cookie carries
 `Secure`, so over a plain connection the login appears to work and then never

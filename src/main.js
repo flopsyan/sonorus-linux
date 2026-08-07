@@ -14,9 +14,6 @@ import path from 'node:path';
 import * as config from './config.js';
 import { belongsTo, normalize, reachable } from './server-url.js';
 
-/** Pre-filled in the setup window, the same address the Android app offers. */
-const DEFAULT_SERVER = 'https://sonorus.example.com';
-
 const ICON = path.join(import.meta.dirname, '..', 'build', 'icon.png');
 const PRELOAD = path.join(import.meta.dirname, 'preload.cjs');
 const SETUP_PRELOAD = path.join(import.meta.dirname, 'setup', 'preload.cjs');
@@ -148,7 +145,9 @@ function openSetup() {
 
 ipcMain.handle('setup:state', () => {
   const server = config.read().server;
-  return { server: server ?? DEFAULT_SERVER, configured: Boolean(server) };
+  // Empty on the very first start: every install has its own server, so there
+  // is no address worth guessing. The field shows a placeholder instead.
+  return { server: server ?? '', configured: Boolean(server) };
 });
 
 ipcMain.handle('setup:connect', async (event, input) => {
