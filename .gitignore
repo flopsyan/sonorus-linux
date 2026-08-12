@@ -1,2 +1,5 @@
 node_modules/
 dist/
+
+# Local Claude Code context: points at a private vault, not for the public repo
+CLAUDE.md
