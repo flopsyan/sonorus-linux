@@ -1,95 +1,103 @@
-# Sonorus for Linux
+# Sonorus für Linux
 
-Sonorus in its own window: the self-hosted music library without a browser
-around it, an entry in the application menu, and its own icon in the task bar.
+Sonorus in einem eigenen Fenster: die selbst gehostete Bibliothek ohne Browser
+drumherum, ein Eintrag im Anwendungsmenü und ein eigenes Symbol in der
+Taskleiste.
 
-**The client is the web app.** This repository is only the shell around it - an
-Electron window that loads your Sonorus server and gets out of the way. There is
-no second player here, no local library and no offline mode: a window around a
-web app reaches exactly as far as that web app does, and anything more would
-mean building a second client.
+**Der Client ist die Web-App.** Dieses Repository ist nur die Hülle darum - ein
+Electron-Fenster, das deinen Sonorus-Server lädt und ansonsten aus dem Weg geht.
+Es gibt hier keinen zweiten Player, keine lokale Bibliothek und keinen
+Offline-Modus: Ein Fenster um eine Web-App reicht genau so weit wie diese
+Web-App, und alles darüber hinaus hieße, einen zweiten Client zu bauen. Was die
+Web-App kann, kann dieses Fenster deshalb auch - Musik, Podcasts, Hörbücher,
+Hörspiele und die Leseansicht für E-Books.
 
-The shell owns four things a browser tab cannot do for it:
+Vier Dinge gehören der Hülle, weil ein Browser-Tab sie nicht leisten kann:
 
-- **which server to load**, asked once and remembered,
-- **how big the window was**, restored on the next start,
-- **staying on that server** - a link leading anywhere else opens in the real
-  browser instead of stranding a window that has no address bar,
-- **the media keys**, which Electron does not answer by itself (see below).
+- **Welcher Server geladen wird**, einmal gefragt und gemerkt,
+- **wie groß das Fenster war**, beim nächsten Start wiederhergestellt,
+- **auf diesem Server zu bleiben** - ein Link, der woanders hinführt, öffnet
+  sich im echten Browser, statt ein Fenster ohne Adresszeile zu stranden,
+- **die Medientasten**, die Electron von sich aus nicht beantwortet (siehe
+  unten).
 
-## Running it from the source
+## Aus dem Quelltext starten
 
 ```bash
 npm install
 npm start
 ```
 
-The first start asks for the address of your Sonorus server and checks that
-something answers there before it saves. Everything after that is the web app's
-own login.
+Der erste Start fragt nach der Adresse deines Sonorus-Servers und prüft, ob dort
+überhaupt etwas antwortet, bevor er sie speichert. Alles danach ist die
+Anmeldung der Web-App selbst.
 
-A missing scheme becomes `https`, never `http`: the session cookie carries
-`Secure`, so over a plain connection the login appears to work and then never
-stays logged in.
+Ein fehlendes Schema wird zu `https`, nie zu `http`: Das Sitzungs-Cookie trägt
+`Secure`, über eine ungesicherte Verbindung sieht die Anmeldung also so aus, als
+hätte sie geklappt - und bleibt dann nie angemeldet.
 
-To point the app somewhere else later, press `Alt` for the menu bar, then
-**Sonorus - Server ändern**. The address and the window size live in
-`config.json` under `~/.config/Sonorus/`; deleting that file brings the setup
-window back.
+Um die App später woandershin zu zeigen: `Alt` für die Menüleiste drücken, dann
+**Sonorus - Server ändern**. Adresse und Fenstergröße liegen in `config.json`
+unter `~/.config/Sonorus/`; löscht man diese Datei, kommt das Einrichtungsfenster
+zurück.
 
-## Building the packages
+## Pakete bauen
 
 ```bash
 npm run dist
 ```
 
-Four artefacts land in `dist/`, and each one carries its own Chromium, which is
-where the size comes from:
+In `dist/` landen vier Artefakte, und jedes bringt sein eigenes Chromium mit -
+daher die Größe:
 
-| File | Size |
+| Datei | Größe |
 |---|---|
 | `Sonorus-<version>.AppImage` | ~128 MB |
 | `sonorus-linux_<version>_amd64.deb` | ~100 MB |
 | `sonorus-linux-<version>.pacman` | ~91 MB |
 | `sonorus-linux-<version>.tar.gz` | ~121 MB |
 
-Those four are the ones electron-builder can produce with nothing installed
-beforehand - it brings its own `fpm`. Two more need a tool on the machine first
-and are therefore not in the default set:
+Diese vier kann electron-builder ohne Vorbereitung erzeugen - es bringt sein
+eigenes `fpm` mit. Zwei weitere brauchen erst ein Werkzeug auf dem Rechner und
+sind deshalb nicht im Standardsatz:
 
 ```bash
-npx electron-builder --linux rpm      # needs rpmbuild (Arch: rpm-tools)
-npx electron-builder --linux snap     # needs snapcraft
+npx electron-builder --linux rpm      # braucht rpmbuild (Arch: rpm-tools)
+npx electron-builder --linux snap     # braucht snapcraft
 ```
 
-`npm run pack` builds only the unpacked directory, which is the quickest way to
-check that a real build starts at all.
+`npm run pack` baut nur das entpackte Verzeichnis - der schnellste Weg zu prüfen,
+ob ein echter Build überhaupt anläuft.
 
-## The media keys, and why they need code here
+## Die Medientasten, und warum sie hier Code brauchen
 
-The web app already feeds `navigator.mediaSession`, so in an ordinary browser
-the media keys and the desktop's media widget work with no help. **Electron does
-not inherit that.** It embeds Chromium's content layer, while the bridge that
-turns a media key into a play/pause (MPRIS on Linux) lives in the browser layer
-around it, which Electron does not ship.
+Die Web-App füttert `navigator.mediaSession` bereits, in einem gewöhnlichen
+Browser funktionieren die Medientasten und das Medien-Widget des Desktops also
+ohne Zutun. **Electron erbt das nicht.** Es bettet Chromiums Content-Layer ein,
+während die Brücke, die aus einer Medientaste ein Play/Pause macht (unter Linux
+MPRIS), im Browser-Layer darüber sitzt - und den liefert Electron nicht mit.
 
-So the shell takes the keys itself and clicks the transport the page already
-draws. Two consequences, both deliberate and both easy to undo by deleting the
-handful of lines in `src/main.js`:
+Also greift sich die Hülle die Tasten selbst und klickt die Transportleiste, die
+die Seite ohnehin zeichnet. Zwei Folgen, beide gewollt und beide durch Löschen
+der paar Zeilen in `src/main.js` rückgängig zu machen:
 
-- **The grab is global.** While Sonorus runs, no other player sees the play,
-  next and previous keys.
-- **It reaches into the web app's DOM** (`#btn-play`, `#btn-next`, `#btn-prev`).
-  Renaming a transport button on the server side stops this working, silently.
+- **Der Zugriff ist global.** Solange Sonorus läuft, sieht kein anderer Player
+  die Tasten für Play, Weiter und Zurück.
+- **Er greift in das DOM der Web-App** (`#btn-play`, `#btn-next`, `#btn-prev`).
+  Wird eine Transport-Schaltfläche serverseitig umbenannt, hört das hier
+  stillschweigend auf zu funktionieren.
 
-**Unverified:** whether the grab takes at all under Wayland, where a client
-cannot necessarily claim global keys. Nothing in the app depends on it.
+**Nicht verifiziert:** ob der Zugriff unter Wayland überhaupt greift, wo ein
+Client globale Tasten nicht ohne Weiteres beanspruchen kann. Nichts in der App
+hängt davon ab.
 
-## What is deliberately not here
+## Was hier bewusst fehlt
 
-- **No tray icon.** Closing the window quits the app, music included.
-- **No offline mode, no downloads, no local files.** The Android client has
-  those because it is a real client; this one is a window.
-- **No auto-update**, even though the build writes the metadata for one.
-- **No Windows or macOS build.** Nothing in the source prevents it, but neither
-  has ever been run.
+- **Kein Tray-Symbol.** Das Fenster zu schließen beendet die App, samt Musik.
+- **Kein Offline-Modus, keine Downloads, keine lokalen Dateien.** Der
+  Android-Client hat das, weil er ein echter Client ist; dieser hier ist ein
+  Fenster.
+- **Keine automatische Aktualisierung**, obwohl der Build die Metadaten dafür
+  schreibt.
+- **Kein Windows- oder macOS-Build.** Nichts im Quelltext spricht dagegen, aber
+  gelaufen ist beides nie.
