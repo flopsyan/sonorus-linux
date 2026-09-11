@@ -214,16 +214,22 @@ function buildMenu() {
 // Under Wayland a client cannot necessarily grab keys at all, so this may
 // simply not take - `register` says so by returning false, and there is nothing
 // useful to do about it from in here.
+//
+// Two selectors per skip, because the web app draws two different transports:
+// spoken word shows fifteen-second skips where music shows prev/next, and the
+// pair that does not apply is `hidden`. The preload clicks the first one that
+// is actually on screen, so the key does what the button under the cursor would
+// - without this, a media key in the middle of a book still jumped a whole file.
 
 const MEDIA_KEYS = {
-  MediaPlayPause: '#btn-play',
-  MediaNextTrack: '#btn-next',
-  MediaPreviousTrack: '#btn-prev',
+  MediaPlayPause: ['#btn-play'],
+  MediaNextTrack: ['#btn-fwd15', '#btn-next'],
+  MediaPreviousTrack: ['#btn-back15', '#btn-prev'],
 };
 
 function registerMediaKeys() {
-  for (const [key, selector] of Object.entries(MEDIA_KEYS)) {
-    globalShortcut.register(key, () => mainWindow?.webContents.send('sonorus:press', selector));
+  for (const [key, selectors] of Object.entries(MEDIA_KEYS)) {
+    globalShortcut.register(key, () => mainWindow?.webContents.send('sonorus:press', selectors));
   }
 }
 

@@ -12,6 +12,16 @@
 
 const { ipcRenderer } = require('electron');
 
-ipcRenderer.on('sonorus:press', (event, selector) => {
-  document.querySelector(selector)?.click();
+// One key can name several buttons: the web app draws a different transport for
+// spoken word than for music and hides the pair that does not apply, so the
+// first one that is on screen is the one the key means.
+ipcRenderer.on('sonorus:press', (event, selectors) => {
+  const list = Array.isArray(selectors) ? selectors : [selectors];
+  for (const selector of list) {
+    const button = document.querySelector(selector);
+    if (button && !button.hidden) {
+      button.click();
+      return;
+    }
+  }
 });
