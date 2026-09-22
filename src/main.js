@@ -220,11 +220,14 @@ function buildMenu() {
 // pair that does not apply is `hidden`. The preload clicks the first one that
 // is actually on screen, so the key does what the button under the cursor would
 // - without this, a media key in the middle of a book still jumped a whole file.
+//
+// The video player's buttons come first: they only exist while a film or an
+// episode is open, and then the key belongs to it and not to the music under it.
 
 const MEDIA_KEYS = {
-  MediaPlayPause: ['#btn-play'],
-  MediaNextTrack: ['#btn-fwd15', '#btn-next'],
-  MediaPreviousTrack: ['#btn-back15', '#btn-prev'],
+  MediaPlayPause: ['#vp-play', '#btn-play'],
+  MediaNextTrack: ['#vp-next', '#vp-fwd10', '#btn-fwd15', '#btn-next'],
+  MediaPreviousTrack: ['#vp-back10', '#btn-back15', '#btn-prev'],
 };
 
 function registerMediaKeys() {
