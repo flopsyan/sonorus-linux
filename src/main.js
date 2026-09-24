@@ -13,6 +13,7 @@ import { app, BrowserWindow, Menu, dialog, globalShortcut, ipcMain, shell } from
 import path from 'node:path';
 import * as config from './config.js';
 import { belongsTo, normalize, reachable } from './server-url.js';
+import { GATEWAY, describeNetError, describeStatus } from './net-errors.js';
 
 const ICON = path.join(import.meta.dirname, '..', 'build', 'icon.png');
 const PRELOAD = path.join(import.meta.dirname, 'preload.cjs');
@@ -68,7 +69,14 @@ function openMain(server) {
     // -3 is ERR_ABORTED, which is what an ordinary superseded navigation looks
     // like from here - not a failure worth a dialog.
     if (!isMainFrame || code === -3) return;
-    showUnreachable(server, description);
+    showUnreachable(server, describeNetError(description));
+  });
+
+  // A proxy that cannot reach Sonorus answers with its own error page, which is
+  // a successful load to Chromium. Left alone it stays in a window that has no
+  // address bar and no way back.
+  mainWindow.webContents.on('did-navigate', (event, url, status) => {
+    if (GATEWAY.has(status) && belongsTo(url, server)) showUnreachable(server, describeStatus(status));
   });
 
   // Written while it happens rather than on the way out. A window ends in more
@@ -155,7 +163,7 @@ ipcMain.handle('setup:connect', async (event, input) => {
   if (!server) return { ok: false, message: 'Das ist keine gültige Adresse.' };
 
   const check = await reachable(server);
-  if (!check.ok) return { ok: false, message: `Keine Verbindung: ${check.error}` };
+  if (!check.ok) return { ok: false, message: describeNetError(check.error) };
 
   config.write({ server });
   // The main window is opened *before* the setup window closes: with no window

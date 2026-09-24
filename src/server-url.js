@@ -49,7 +49,7 @@ export function reachable(url, timeoutMs = 10_000) {
     const request = net.request({ method: 'GET', url });
     const timer = setTimeout(() => {
       request.abort();
-      resolve({ ok: false, error: 'Zeitüberschreitung' });
+      resolve({ ok: false, error: 'Der Server antwortet nicht.' });
     }, timeoutMs);
     request.on('response', (response) => {
       clearTimeout(timer);
