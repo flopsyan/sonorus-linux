@@ -9,7 +9,7 @@
 // the Android app: a window around a web app has exactly the reach of that web
 // app, and pretending otherwise would mean building a second client.
 
-import { app, BrowserWindow, Menu, dialog, globalShortcut, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, Menu, globalShortcut, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import * as config from './config.js';
 import { belongsTo, normalize, reachable } from './server-url.js';
@@ -19,6 +19,8 @@ const ICON = path.join(import.meta.dirname, '..', 'build', 'icon.png');
 const PRELOAD = path.join(import.meta.dirname, 'preload.cjs');
 const SETUP_PRELOAD = path.join(import.meta.dirname, 'setup', 'preload.cjs');
 const SETUP_PAGE = path.join(import.meta.dirname, 'setup', 'setup.html');
+const UNREACHABLE_PRELOAD = path.join(import.meta.dirname, 'unreachable', 'preload.cjs');
+const UNREACHABLE_PAGE = path.join(import.meta.dirname, 'unreachable', 'unreachable.html');
 
 /** The chassis colour of the web app, so no white frame flashes before it paints. */
 const CHASSIS = '#100e14';
@@ -27,6 +29,7 @@ const BOUNDS_DEBOUNCE_MS = 400;
 
 let mainWindow = null;
 let setupWindow = null;
+let unreachable = null;
 
 // --- The window the music is in ---------------------------------------------
 
@@ -115,20 +118,46 @@ function openExternal(url) {
   if (/^https?:\/\//i.test(url)) shell.openExternal(url);
 }
 
-async function showUnreachable(server, reason) {
-  const { response } = await dialog.showMessageBox(mainWindow, {
-    type: 'error',
+// Not a native message box: it would be the only part of the app the system draws.
+function showUnreachable(server, reason) {
+  // A failed load and a gateway page can both report the same outage.
+  if (unreachable) return;
+  const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
+  const win = new BrowserWindow({
+    width: 520,
+    height: 330,
+    resizable: false,
+    parent,
+    modal: Boolean(parent),
     title: 'Sonorus',
-    message: 'Der Server ist nicht erreichbar.',
-    detail: `${server}\n\n${reason}`,
-    buttons: ['Erneut versuchen', 'Server ändern …', 'Beenden'],
-    defaultId: 0,
-    cancelId: 2,
+    icon: ICON,
+    backgroundColor: CHASSIS,
+    webPreferences: { preload: UNREACHABLE_PRELOAD },
   });
-  if (response === 0) mainWindow?.loadURL(server);
-  else if (response === 1) openSetup();
-  else app.quit();
+  const entry = { win, server, reason, chosen: false };
+  unreachable = entry;
+  win.removeMenu();
+  win.loadFile(UNREACHABLE_PAGE);
+  // Closing the window is the "Beenden" answer, as Escape was for the message box.
+  win.on('closed', () => {
+    if (unreachable === entry) unreachable = null;
+    if (!entry.chosen) app.quit();
+  });
 }
+
+ipcMain.handle('unreachable:state', () => ({ server: unreachable?.server ?? '', reason: unreachable?.reason ?? '' }));
+
+ipcMain.on('unreachable:choose', (event, action) => {
+  if (!unreachable) return;
+  const { win, server } = unreachable;
+  if (action === 'quit') return app.quit();
+  // Cleared now, not when the window is gone: a retry that fails again must be able to open the next one.
+  unreachable.chosen = true;
+  unreachable = null;
+  win.close();
+  if (action === 'retry') mainWindow?.loadURL(server);
+  else if (action === 'change') openSetup();
+});
 
 // --- The window that asks where the server is -------------------------------
 

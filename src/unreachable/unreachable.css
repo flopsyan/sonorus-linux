@@ -1,0 +1,26 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: left;
+}
+
+.server {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.reason {
+  min-height: 32px;
+  margin: 0 0 14px;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+  user-select: text;
+}
+
+.actions button { white-space: nowrap; }

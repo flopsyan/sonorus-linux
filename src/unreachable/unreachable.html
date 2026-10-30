@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; script-src 'self'"
+    />
+    <title>Sonorus</title>
+    <link rel="stylesheet" href="../setup/setup.css" />
+    <link rel="stylesheet" href="unreachable.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Sonorus</h1>
+      <p class="tagline">Der Server ist nicht erreichbar.</p>
+
+      <div class="panel">
+        <span class="rack-label">Server</span>
+        <p class="server" id="server"></p>
+        <p class="reason" id="reason"></p>
+        <div class="actions">
+          <button type="button" id="quit" class="ghost">Beenden</button>
+          <button type="button" id="change" class="ghost">Server ändern &hellip;</button>
+          <button type="button" id="retry" class="primary">Erneut versuchen</button>
+        </div>
+      </div>
+    </main>
+    <script src="unreachable.js"></script>
+  </body>
+</html>
